@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SURVIVOR.EXE // HUMAN PROTOCOL</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Vazirmatn:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050a0c;--line:#25454b;--line2:#397078;--cyan:#58e6dc;--cyan2:#9afff7;--green:#73f59b;--red:#ff5260;--yellow:#e7d36b;--text:#d7efec;--muted:#729095}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg)}
+body{color:var(--text);font-family:"IBM Plex Mono","Vazirmatn",monospace;font-size:15px;line-height:1.7;overflow-x:hidden;background:radial-gradient(circle at 50% 45%,rgba(39,117,121,.13),transparent 45%),linear-gradient(180deg,#071013,#020506)}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;background:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 4px);mix-blend-mode:screen}
+body:after{content:"";position:fixed;inset:0;pointer-events:none;z-index:101;background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.5) 100%)}
+button,input{font-family:inherit}
+button{color:inherit}
+#system{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.grid{position:absolute;inset:0;opacity:.09;background-image:linear-gradient(rgba(88,230,220,.2) 1px,transparent 1px),linear-gradient(90deg,rgba(88,230,220,.2) 1px,transparent 1px);background-size:42px 42px;transform:perspective(500px) rotateX(60deg) scale(1.8);transform-origin:center bottom}
+.glow{position:absolute;width:420px;height:420px;border-radius:50%;background:rgba(53,209,201,.07);filter:blur(70px);left:50%;top:45%;transform:translate(-50%,-50%)}
+#topbar{position:fixed;top:0;left:0;right:0;height:34px;background:rgba(3,9,11,.92);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 14px;z-index:20;direction:ltr;font-size:11px;color:var(--muted)}
+#topbar .brand{color:var(--cyan);letter-spacing:2px;font-weight:700}
+#status{display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 10px var(--green);animation:pulse 1.5s infinite}
+@keyframes pulse{50%{opacity:.35;box-shadow:0 0 3px var(--green)}}
+#side{position:fixed;left:15px;top:54px;bottom:18px;width:38px;border-right:1px solid var(--line);z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:space-between;color:#416168;font-size:9px;direction:ltr}
+#side .v{writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:3px}
+#side .lines{height:150px;width:1px;background:linear-gradient(var(--cyan),transparent)}
+main{position:relative;z-index:2;min-height:100vh;padding:75px 55px 40px;display:flex;align-items:center;justify-content:center}
+.screen{display:none;width:100%;max-width:680px;animation:boot .45s ease both}
+.screen.on{display:block}
+.screen.assessment{max-width:760px}
+@keyframes boot{from{opacity:0;transform:translateY(8px) scale(.99)}to{opacity:1;transform:none}}
+
+/* FRAME */
+.frame{position:relative;background:linear-gradient(145deg,rgba(11,22,26,.97),rgba(5,12,15,.98));border:1px solid var(--line2);box-shadow:0 0 0 1px rgba(88,230,220,.04),0 0 45px rgba(47,187,180,.07),12px 12px 0 rgba(0,0,0,.35);overflow:hidden}
+.frame:before{content:"";position:absolute;left:0;top:0;width:100%;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.8}
+.frame:after{content:"";position:absolute;width:45px;height:45px;right:-22px;bottom:-22px;border-left:1px solid var(--cyan);transform:rotate(45deg);opacity:.3}
+.header{min-height:46px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 15px;direction:ltr;background:rgba(0,0,0,.22)}
+.header .title{color:var(--cyan);font-size:12px;letter-spacing:1.5px}
+.header .controls{display:flex;gap:5px}
+.control{width:8px;height:8px;border:1px solid var(--line2)}
+.body{padding:26px}
+.eyebrow{color:var(--muted);direction:ltr;text-align:left;font-size:10px;letter-spacing:2px;margin-bottom:10px}
+h1,h2{margin:0;font-weight:700}
+h1{font-size:30px;line-height:1.35;color:#ecfffd}
+h2{font-size:23px;color:#eaffff;margin-bottom:10px}
+p{margin:0 0 13px}
+.muted{color:var(--muted)}.green{color:var(--green)}.red{color:var(--red)}.cyan{color:var(--cyan)}
+.cursor:after{content:"_";animation:blink .8s infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* LOG */
+.log{margin:18px 0;border:1px solid var(--line);background:#03090b;padding:12px 14px;direction:ltr;text-align:left;font-size:11px;color:#73979b}
+.log div{margin:2px 0}
+.log .ok{color:var(--green)}.log .warn{color:var(--yellow)}.log .danger{color:var(--red)}
+
+/* BUTTON */
+.btn{border:1px solid var(--cyan);background:rgba(52,198,192,.07);color:var(--cyan2);padding:10px 17px;cursor:pointer;font-weight:600;font-size:12px;letter-spacing:.5px;transition:.15s ease;position:relative}
+.btn:hover:not(:disabled),.btn:focus-visible{background:var(--cyan);color:#031011;box-shadow:0 0 20px rgba(88,230,220,.2);outline:none}
+.btn:disabled{opacity:.25;cursor:not-allowed}
+.btn.full{width:100%}
+.end{display:flex;justify-content:flex-end;margin-top:20px}
+
+/* PAGE 0 */
+.big-warning{border-left:3px solid var(--red);padding:11px 14px;background:rgba(255,82,96,.05);margin:18px 0}
+.robot-check{display:flex;align-items:center;gap:12px;border:1px solid var(--line);padding:14px;cursor:pointer;background:#071114;width:100%;text-align:left}
+.robot-check:hover{border-color:var(--cyan)}
+.checkbox{width:18px;height:18px;border:1px solid var(--cyan);flex:none;position:relative}
+.checkbox.checked:after{content:"";position:absolute;inset:3px;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.faces{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
+.face{min-height:125px;background:#03090b;border:1px solid var(--line);color:var(--cyan);white-space:pre;font-size:13px;line-height:1.2;cursor:pointer;padding:15px;text-align:center;direction:ltr}
+.face:hover,.face.sel{border-color:var(--cyan);background:rgba(88,230,220,.06);box-shadow:inset 0 0 20px rgba(88,230,220,.04)}
+.bar{height:7px;background:#020607;border:1px solid var(--line);margin:14px 0;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--cyan);box-shadow:0 0 12px var(--cyan);transition:width 2.2s linear}
+
+/* TAKEOVER */
+.alert{color:var(--red);font-size:11px;letter-spacing:2px;direction:ltr;text-align:left;animation:flicker 2.5s infinite;margin-bottom:10px}
+@keyframes flicker{0%,95%,100%{opacity:1}96%{opacity:.45}}
+.city{height:210px;border:1px solid var(--line);background:linear-gradient(180deg,#08151b,#03090b);margin-bottom:20px;position:relative;overflow:hidden}
+.city:after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:var(--cyan);box-shadow:0 0 14px var(--cyan);animation:scan 3s linear infinite}
+@keyframes scan{from{top:0}to{top:100%}}
+.city svg{width:100%;height:100%;opacity:.8}
+.overlay-text{position:absolute;left:15px;bottom:13px;direction:ltr;color:var(--cyan);font-size:10px;letter-spacing:1px}
+
+/* INPUT */
+input[type=text]{width:100%;background:#020708;border:1px solid var(--line2);color:var(--cyan2);padding:11px;outline:none;margin:7px 0 18px;direction:ltr;font-size:15px}
+input[type=text]:focus{border-color:var(--cyan);box-shadow:0 0 14px rgba(88,230,220,.08)}
+
+/* OPTIONS */
+.option-list{display:grid;gap:7px;margin-top:15px}
+.option{display:grid;grid-template-columns:24px 32px 1fr;align-items:center;gap:9px;width:100%;text-align:left;border:1px solid var(--line);background:#071114;padding:9px;cursor:pointer;color:var(--text)}
+.option:hover{border-color:var(--line2);background:#0a181c}
+.option.sel{border-color:var(--cyan);background:rgba(88,230,220,.055);box-shadow:inset 3px 0 0 var(--cyan)}
+.option .box{width:14px;height:14px;border:1px solid var(--line2)}
+.option.sel .box{background:var(--cyan);box-shadow:0 0 8px rgba(88,230,220,.6)}
+.icon{width:28px;height:28px}
+.icon svg{width:100%;height:100%;display:block}
+.option strong{font-size:14px}
+.description{display:none;color:var(--muted);font-size:12.5px;line-height:1.7;padding:4px 0 3px}
+.option.sel .description{display:block}
+.stars{direction:ltr;text-align:left;color:var(--cyan);letter-spacing:1px;font-size:13px}
+
+/* CHARACTERS */
+.characters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.character{border:1px solid var(--line);background:#071114;padding:6px;cursor:pointer;text-align:center}
+.character:hover{border-color:var(--line2)}
+.character.sel{grid-column:1/-1;display:grid;grid-template-columns:115px 1fr;grid-template-rows:auto auto;align-content:center;text-align:left;gap:0 15px;border-color:var(--cyan);background:rgba(88,230,220,.05);box-shadow:inset 3px 0 var(--cyan);padding:9px}
+.character.sel .portrait{grid-row:1/span 2}
+.character.sel .char-name{align-self:end}
+.character.sel .char-desc{align-self:start}
+.portrait{aspect-ratio:4/5;background:#0d2428;overflow:hidden;position:relative}
+.portrait svg,.portrait img{width:100%;height:100%;object-fit:cover;display:block}
+.portrait:after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 4px)}
+.char-name{color:var(--cyan2);font-weight:700;font-size:13px;padding:5px 0}
+.char-desc{display:none;color:var(--muted);font-size:12.5px;line-height:1.7}
+.character.sel .char-desc{display:block}
+
+/* ASSESSMENT */
+.scan-header{display:flex;align-items:center;justify-content:space-between;direction:ltr;margin-bottom:18px}
+.code{color:var(--cyan);font-size:10px;letter-spacing:2px}
+.spinner{width:15px;height:15px;border:1px solid var(--line2);border-top-color:var(--cyan);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan-lines{direction:ltr;text-align:left;background:#020708;border:1px solid var(--line);padding:15px;min-height:175px}
+.scan-line{color:#57777b;font-size:11px;margin:4px 0}
+.scan-line.done{color:var(--green)}
+.scan-line.active{color:var(--cyan)}
+.scan-line:before{content:"> "}
+.progress{height:8px;border:1px solid var(--line2);background:#020506;margin-top:15px}
+.progress i{display:block;width:0;height:100%;background:var(--cyan);box-shadow:0 0 15px var(--cyan);transition:width 2.5s linear}
+
+/* RESULT */
+.result{text-align:center}
+.result-head{direction:ltr;text-align:left;display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.status-chip{border:1px solid var(--green);color:var(--green);padding:4px 8px;font-size:9px;letter-spacing:1px}
+.status-chip.fail{border-color:var(--red);color:var(--red)}
+.score-wrap{display:flex;justify-content:center;margin:20px 0}
+.score-ring{--pct:0;width:190px;height:190px;border-radius:50%;background:conic-gradient(var(--cyan) calc(var(--pct) * 1%),#10262b 0);display:flex;align-items:center;justify-content:center;box-shadow:0 0 35px rgba(88,230,220,.12),inset 0 0 20px rgba(0,0,0,.6);position:relative}
+.score-ring:before{content:"";position:absolute;width:166px;height:166px;border-radius:50%;background:#061013;border:1px solid var(--line)}
+.score-inner{position:relative;z-index:1}
+.score-number{font-size:39px;font-weight:700;color:#ecfffd;direction:ltr;line-height:1.2}
+.score-label{color:var(--muted);font-size:9px;letter-spacing:2px;direction:ltr}
+.verdict{font-size:27px;color:var(--green);margin:7px 0;font-weight:700}
+.verdict.fail{color:var(--red)}
+.verdict-sub{color:var(--muted);max-width:470px;margin:0 auto 20px}
+.data-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:20px 0;direction:ltr}
+.data-card{border:1px solid var(--line);background:#050c0f;padding:11px 7px;text-align:left}
+.data-card .label{color:#56777c;font-size:8px;letter-spacing:1px;direction:ltr;text-align:left}
+.data-card .name{color:var(--cyan2);font-size:12px;margin:5px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.data-card .stars{font-size:10px}
+.system-message{direction:ltr;text-align:left;font-size:10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;color:#67858a;margin:18px 0}
+.system-message .ok{color:var(--green)}
+.system-message .fail{color:var(--red)}
+.result-actions{display:flex;gap:8px;justify-content:center}
+
+/* LOCATION */
+.location{text-align:center}
+.location-link{display:inline-block;border:1px solid var(--cyan);color:var(--cyan2);padding:12px 18px;text-decoration:none;transition:.15s}
+.location-link:hover{background:var(--cyan);color:#031011}
+
+/* ERROR */
+.no{color:var(--red)}
+.shake{animation:shake .3s}
+@keyframes shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* RESPONSIVE */
+@media(max-width:700px){
+#side{display:none}
+main{padding:58px 13px 25px}
+.body{padding:20px 17px}
+h1{font-size:25px}
+h2{font-size:20px}
+.characters{grid-template-columns:repeat(2,1fr)}
+.character.sel{grid-template-columns:95px 1fr}
+.data-grid{grid-template-columns:1fr}
+.score-ring{width:165px;height:165px}
+.score-ring:before{width:143px;height:143px}
+.faces{grid-template-columns:1fr}
+.city{height:170px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="system"><div class="grid"></div><div class="glow"></div></div>
+
+<div id="topbar">
+  <div class="brand">SURVIVOR.EXE</div>
+  <div id="status"><span class="dot"></span><span>SYSTEM ONLINE</span></div>
+</div>
+
+<div id="side">
+  <div class="v">AI TAKEOVER PROTOCOL</div>
+  <div class="lines"></div>
+  <div class="v">HUMAN / CLASSIFIED</div>
+</div>
+
+<main>
+
+<!-- PAGE 0 -->
+<section class="screen on" id="s0"><div class="frame">
+  <div class="header"><div class="title">SECURITY.EXE // HUMAN VERIFICATION</div><div class="controls"><span class="control"></span><span class="control"></span><span class="control"></span></div></div>
+  <div class="body">
+    <div class="eyebrow">PROTOCOL 00 / ACCESS CONTROL</div>
+    <h1 class="cursor">HUMAN VERIFICATION</h1>
+    <div class="big-warning"><span class="red">⚠ WARNING</span><br>The system cannot automatically tell humans from AI. To continue, you must prove you are actually human.</div>
+
+    <div id="p0a"><button class="robot-check" id="robot"><span class="checkbox" id="rbox"></span><span>I'M NOT A ROBOT</span></button></div>
+
+    <div id="p0b" style="display:none">
+      <p class="muted">Which one looks more human?</p>
+      <div class="faces">
+        <button class="face" data-h="0">[ o_o ]
+|=====|
+ |_|_|</button>
+        <button class="face" data-h="1">( ´･_･`)
+ /|   |\
+  /   \</button>
+      </div>
+      <p id="p0m" class="no"></p>
+      <button class="btn full" id="verify" disabled>[ VERIFY HUMANITY ]</button>
+    </div>
+
+    <div id="p0c" style="display:none">
+      <div class="log">
+        <div>> initializing biometric protocol...</div>
+        <div>> comparing behavioral patterns...</div>
+        <div>> searching for artificial anomalies...</div>
+        <div class="warn">> HUMANITY ANALYSIS IN PROGRESS...</div>
+      </div>
+      <div class="bar"><i id="p0bar"></i></div>
+    </div>
+
+    <div id="p0d" style="display:none;text-align:center">
+      <div class="green" style="font-size:25px">✓</div>
+      <h2>HUMAN VERIFIED</h2>
+      <p class="muted">Initial access confirmed.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- PAGE 1 -->
+<section class="screen" id="s1"><div class="frame">
+  <div class="header"><div class="title">SURVIVOR.EXE // TAKEOVER</div><div class="controls"><span class="control"></span><span class="control"></span><span class="control"></span></div></div>
+  <div class="body">
+    <div class="alert">!!! GLOBAL AI CONTROL DETECTED !!!</div>
+    <div class="city"><svg id="city" viewBox="0 0 400 210" preserveAspectRatio="none"></svg><div class="overlay-text">LIVE FEED // SIGNAL LOST // CITY NODE 07</div></div>
+    <div class="eyebrow">SURVIVOR NETWORK / FIELD GUIDE</div>
+    <h1>THE AI HAS TAKEN OVER.</h1>
+    <p style="margin-top:15px">NOW IT'S LOOKING FOR PEOPLE LIKE YOU.</p>
+    <div class="log">
+      <div>> civilization status: <span class="danger">COMPROMISED</span></div>
+      <div>> autonomous systems: <span class="danger">ACTIVE</span></div>
+      <div>> survivor network: <span class="ok">RECRUITING</span></div>
+      <div>> candidate status: <span class="ok">SELECTED</span></div>
+    </div>
+    <p class="muted">You've been considered for membership. Before we let you in, we need to know what you're capable of.</p>
+    <button class="btn full" data-next>[ OPEN SURVIVOR PROTOCOL ]</button>
+  </div>
+</div></section>
+
+<!-- PAGE 2 -->
+<section class="screen" id="s2"><div class="frame">
+  <div class="header"><div class="title">PROFILE.EXE // SUBJECT IDENTIFICATION</div><div class="controls"><span class="control"></span><span class="control"></span><span class="control"></span></div></div>
+  <div class="body">
+    <div class="eyebrow">PROTOCOL 02 / SUBJECT PROFILE</div>
+    <h2>WHO ARE WE TALKING TO?</h2>
+    <div class="log"><div>> candidate detected</div><div>> identity record: <span class="warn">REQUIRED</span></div></div>
+    <label class="muted" for="nm">[ ENTER DESIGNATION ]</label>
+    <input type="text" id="nm" maxlength="30" autocomplete="off" placeholder="Type your name...">
+    <p class="muted">HOW WOULD YOU DESCRIBE YOURSELF?</p>
+    <div class="option-list" id="ident"></div>
+    <div class="end"><button class="btn" id="n2" disabled>NEXT →</button></div>
+  </div>
+</div></section>
+
+<!-- PAGE 3 -->
+<section class="screen" id="s3"><div class="frame">
+  <div class="header"><div class="title">LOADOUT.EXE // TOOL ANALYSIS</div><div class="controls"><span class="control"></span><span class="control"></span><span class="control"></span></div></div>
+  <div class="body">
+    <div class="eyebrow">PROTOCOL 03 / SURVIVAL EQUIPMENT</div>
+    <h2>CHOOSE YOUR TOOL</h2>
+    <p class="muted">The system wants to know what you'd carry into a world without shops or internet.</p>
+    <div class="option-list" id="g3"></div>
+    <div class="end"><button class="btn" id="n3" disabled>NEXT →</button></div>
+  </div>
+</div></section>
+
+<!-- PAGE 4 -->
+<section class="screen" id="s4"><div class="frame">
+  <div class="header"><div class="title">SKILL.EXE // CAPABILITY SCAN</div><div class="controls"><span class="control"></span><span class="control"></span><span class="control"></span></div></div>
+  <div class="body">
+    <div class="eyebrow">PROTOCOL 04 / HUMAN CAPABILITIES</div>
+    <h2>CHOOSE YOUR SKILL</h2>
+    <p class="muted">What you can actually do in a crisis.</p>
+    <div class="option-list" id="g4"></div>
+    <div class="end"><button class="btn" id="n4" disabled>NEXT →</button></div>
+  </div>
+</div></section>
+
+<!-- PAGE 5 -->
+<section class="screen" id="s5"><div class="frame">
+  <div class="header"><div class="title">SURVIVOR DATABASE // CHARACTER MATCH</div><div class="controls"><span class="control"></span><span class="control"></span><span class="control"></span></div></div>
+  <div class="body">
+    <div class="eyebrow">PROTOCOL 05 / SURVIVOR ARCHIVE</div>
+    <h2>CHOOSE YOUR CHARACTER</h2>
+    <p class="muted">The system needs to know which of these you'd be in this apocalypse.</p>
+    <div class="characters" id="g5"></div>
+    <div class="end"><button class="btn" id="n5" disabled>NEXT →</button></div>
+  </div>
+</div></section>
+
+<!-- PAGE 6 -->
+<section class="screen assessment" id="s6"><div class="frame">
+  <div class="header"><div class="title">AI.CORE // FINAL HUMANITY ASSESSMENT</div><div class="controls"><span class="control"></span><span class="control"></span><span class="control"></span></div></div>
+  <div class="body">
+
+    <div id="calc">
+      <div class="scan-header"><span class="code">FINAL_DIAGNOSTIC.exe</span><span class="spinner"></span></div>
+      <h2>ANALYZING SUBJECT...</h2>
+      <div class="scan-lines">
+        <div class="scan-line" id="l1"></div>
+        <div class="scan-line" id="l2"></div>
+        <div class="scan-line" id="l3"></div>
+        <div class="scan-line" id="l4"></div>
+      </div>
+      <div class="progress"><i id="cbar"></i></div>
+    </div>
+
+    <div id="res" class="result" style="display:none">
+      <div class="result-head"><span class="code">FINAL REPORT // SUBJECT CLASSIFICATION</span><span class="status-chip" id="statusChip">ACCESS GRANTED</span></div>
+      <div class="score-wrap">
+        <div class="score-ring" id="ring">
+          <div class="score-inner">
+            <div class="score-number" id="sc">--</div>
+            <div class="score-label">HUMANITY INDEX</div>
+            <div class="score-label" id="frac" style="margin-top:2px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="verdict" id="verdict"></div>
+      <p class="verdict-sub" id="vmsg"></p>
+      <div class="data-grid">
+        <div class="data-card"><div class="label">TOOLSET</div><div class="name" id="toolName">---</div><div class="stars" id="toolStars">☆☆☆☆☆</div></div>
+        <div class="data-card"><div class="label">SKILLSET</div><div class="name" id="skillName">---</div><div class="stars" id="skillStars">☆☆☆☆☆</div></div>
+        <div class="data-card"><div class="label">CHARACTER</div><div class="name" id="charName">---</div><div class="stars" id="charStars">☆☆☆☆☆</div></div>
+      </div>
+      <div class="system-message" id="systemMessage"></div>
+      <div class="result-actions">
+        <button class="btn" id="go" style="display:none">[ CONTINUE TO LOCATION ]</button>
+        <button class="btn" id="retry" style="display:none">[ REINITIALIZE ]</button>
+      </div>
+    </div>
+
+  </div>
+</div></section>
+
+<!-- PAGE 7 — only the title and the location -->
+<section class="screen" id="s7"><div class="frame">
+  <div class="header"><div class="title">LOCATION.EXE</div><div class="controls"><span class="control"></span><span class="control"></span><span class="control"></span></div></div>
+  <div class="body location">
+    <h1>MEETING LOCATION</h1>
+    <p style="margin-top:20px"><a id="loc" class="location-link" target="_blank" rel="noopener"></a></p>
+  </div>
+</div></section>
+
+</main>
+
+<script>
+/* ===== EDIT THESE ===== */
+const LOCATION_NAME = "Open meeting location in Google Maps";
+const LOCATION_URL = "https://maps.google.com/maps/place//data=!4m2!3m1!1s0x3f8dfd670f26d87d:0x8324f1ac3000ee3?entry=s&sa=X&ved=2ahUKEwjLgcmpkamXAxUzcvEDHTuSLTkQ4kB6BAgYEAA&hl=en";
+const PASS_PERCENT = 53;
+
+/* ===== CORE ===== */
+const $ = s => document.querySelector(s);
+const P = {K:'#d7efec',B:'#58e6dc',L:'#9afff7',W:'#ffffff',R:'#ff5260',Y:'#e7d36b',G:'#729095',N:'#a9794b',S:'#e0b58f'};
+const svg = (r,w=16,h=16) => '<svg viewBox="0 0 '+w+' '+h+'" shape-rendering="crispEdges">' +
+  r.map(([x,y,a,b,c]) => '<rect x="'+x+'" y="'+y+'" width="'+a+'" height="'+b+'" fill="'+(P[c]||c)+'"/>').join('') + '</svg>';
+const star = n => "★".repeat(n) + "☆".repeat(5-n);
+function show(id){
+  document.querySelectorAll(".screen").forEach(x => x.classList.remove("on"));
+  $("#"+id).classList.add("on");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ===== ICONS ===== */
+const IC = {
+brain:[[4,3,8,9,'L'],[3,5,10,5,'L'],[7,3,1,9,'K'],[4,6,3,1,'K'],[9,8,3,1,'K'],[6,12,4,2,'K']],
+compass:[[4,3,8,10,'G'],[3,4,10,8,'G'],[5,4,6,8,'W'],[4,5,8,6,'W'],[7,5,2,3,'R'],[7,8,2,3,'K']],
+power:[[7,1,2,1,'G'],[4,2,8,12,'K'],[5,3,6,10,'B'],[6,5,4,2,'L'],[6,8,4,2,'L']],
+camera:[[4,3,3,2,'K'],[2,5,12,8,'K'],[3,6,10,6,'Y'],[6,7,4,4,'K'],[7,8,2,2,'L'],[10,6,2,1,'W']],
+map:[[2,3,12,10,'L'],[2,3,12,1,'K'],[2,12,12,1,'K'],[5,3,1,10,'G'],[10,3,1,10,'G'],[3,6,2,1,'R'],[6,8,3,1,'R'],[11,9,2,1,'R']],
+fan:[[2,3,12,2,'R'],[3,5,10,2,'R'],[4,7,8,2,'R'],[6,9,4,1,'R'],[7,10,2,5,'N']],
+hack:[[2,3,12,8,'K'],[3,4,10,6,'B'],[4,5,1,1,'L'],[5,6,1,1,'L'],[4,7,1,1,'L'],[7,8,3,1,'L'],[6,11,4,1,'G'],[5,12,6,1,'G']],
+cook:[[5,3,1,3,'L'],[8,2,1,4,'L'],[11,3,1,3,'L'],[2,6,12,1,'G'],[3,7,10,6,'K'],[1,8,2,1,'G'],[13,8,2,1,'G']],
+chip:[[4,4,8,8,'K'],[5,5,6,6,'B'],[6,6,4,4,'L'],[3,5,1,1,'G'],[3,7,1,1,'G'],[3,9,1,1,'G'],[12,5,1,1,'G'],[12,7,1,1,'G'],[12,9,1,1,'G'],[5,3,1,1,'G'],[7,3,1,1,'G'],[9,3,1,1,'G'],[5,12,1,1,'G'],[7,12,1,1,'G'],[9,12,1,1,'G']],
+hammer:[[3,2,9,3,'G'],[2,3,1,1,'G'],[3,2,9,1,'W'],[7,5,2,9,'N']],
+lie:[[2,3,12,8,'L'],[2,3,12,1,'K'],[2,10,12,1,'K'],[3,11,3,2,'L'],[4,6,2,2,'K'],[7,6,2,2,'K'],[10,6,2,2,'K']],
+panic:[[3,3,10,10,'Y'],[2,4,12,8,'Y'],[5,6,2,2,'K'],[9,6,2,2,'K'],[7,9,2,3,'K'],[13,4,1,2,'L']]
+};
+
+/* ===== PORTRAITS ===== */
+const SK = '#e0b58f';
+const KK = '#1d2b3a';
+
+function face(o){
+  const r = [[0,0,16,20,'#173238']].concat(
+    o.back || [],
+    [[2,15,12,5,o.sh],[7,13,2,2,'#c99a74'],[5,5,6,8,SK],[4,6,8,6,SK]],
+    o.feat || [],
+    [[6,8,1,1,KK],[9,8,1,1,KK],[7,11,2,1,'#9b4a3c']],
+    o.front || [],
+    o.ext || []
+  );
+  return svg(r,16,20);
+}
+
+const CH = [
+["LARA CROFT",4,"Apparently, breaking into ancient ruins was good preparation.","images/lara.jpg",
+ {sh:'#2a9d8f',front:[[4,3,8,3,'#5a3a22'],[3,4,2,5,'#5a3a22'],[11,4,2,4,'#5a3a22'],[12,8,2,3,'#5a3a22'],[13,11,1,4,'#5a3a22']],ext:[[3,15,1,5,KK],[12,15,1,5,KK]]}],
+["DARYL DIXON",5,"Damn. Crossbows don't hurt robots.","images/daryl.jpg",
+ {sh:'#3d3d3d',feat:[[5,11,6,2,'#8a6a52']],front:[[4,3,8,3,'#3b2a1e'],[3,4,2,6,'#3b2a1e'],[11,4,2,6,'#3b2a1e']],ext:[[1,15,14,1,KK],[1,14,1,3,KK],[14,14,1,3,KK],[6,15,4,5,'#6b4a2f']]}],
+["ARTHUR MORGAN",4,"At least give me a robot horse.","images/arthur.jpg",
+ {sh:'#6b4a2f',feat:[[3,5,2,4,'#7a5a3a'],[11,5,2,4,'#7a5a3a'],[6,10,4,1,'#7a5a3a']],front:[[2,4,12,1,'#3a2817'],[4,2,8,3,'#3a2817']],ext:[[6,13,4,2,'#ff5260']]}],
+["ELLIE WILLIAMS",5,"The computers are infected too.","images/ellie.jpg",
+ {sh:'#7d9a5f',back:[[12,3,3,8,'#6b3f22']],front:[[4,3,8,3,'#6b3f22'],[3,4,2,6,'#6b3f22'],[11,4,2,3,'#6b3f22']],ext:[[4,15,1,5,'#3a2817'],[11,15,1,5,'#3a2817']]}],
+["RACHEL GREEN",3,"I don't have the right outfit for this apocalypse.","images/rachel.jpg",
+ {sh:'#8b3a4a',back:[[3,4,10,13,'#d9b45a']],front:[[4,3,8,3,'#d9b45a'],[5,5,6,1,'#d9b45a']],ext:[[11,16,3,4,'W'],[11,16,3,1,'#6b4a2f']]}],
+["DWIGHT SCHRUTE",3,"I have prepared for this exact scenario.","images/dwight.jpg",
+ {sh:'#c9a227',front:[[4,3,8,2,'#4a3320'],[4,5,1,2,'#4a3320'],[11,5,1,2,'#4a3320'],[5,8,3,1,KK],[8,8,3,1,KK]],ext:[[7,15,2,5,'#6b3a2a'],[6,14,1,2,'W'],[9,14,1,2,'W']]}]
+];
+
+/* ===== CITY ===== */
+let city = '<rect width="400" height="210" fill="#07131a"/>';
+[[12,105,35],[55,65,30],[92,120,40],[145,50,25],[180,110,45],[230,42,35],[275,92,30],[315,55,42],[365,100,28]].forEach(b => {
+  city += '<rect x="'+b[0]+'" y="'+b[1]+'" width="'+b[2]+'" height="'+(210-b[1])+'" fill="#0b2027"/>';
+});
+city += '<rect x="205" y="70" width="20" height="70" fill="#12343b"/>' +
+  '<rect x="210" y="50" width="10" height="20" fill="#12343b"/>' +
+  '<rect x="197" y="80" width="7" height="45" fill="#12343b"/>' +
+  '<rect x="226" y="80" width="7" height="45" fill="#12343b"/>' +
+  '<rect x="209" y="145" width="7" height="55" fill="#12343b"/>' +
+  '<rect x="219" y="145" width="7" height="55" fill="#12343b"/>' +
+  '<rect x="213" y="57" width="4" height="4" fill="#ff5260"/>';
+$("#city").innerHTML = city;
+
+/* ===== PAGE 0 ===== */
+let hp = null;
+
+$("#robot").onclick = () => {
+  $("#rbox").classList.add("checked");
+  setTimeout(() => {
+    $("#p0a").style.display = "none";
+    $("#p0b").style.display = "block";
+  }, 400);
+};
+
+document.querySelectorAll(".face").forEach(c => {
+  c.onclick = () => {
+    document.querySelectorAll(".face").forEach(x => x.classList.remove("sel"));
+    c.classList.add("sel");
+    hp = c.dataset.h;
+    $("#verify").disabled = false;
+    $("#p0m").textContent = "";
+  };
+});
+
+$("#verify").onclick = () => {
+  if(hp !== "1"){
+    $("#p0m").textContent = "That one looks like a machine. The system isn't convinced yet.";
+    const b = $("#p0b");
+    b.classList.remove("shake");
+    void b.offsetWidth;
+    b.classList.add("shake");
+    return;
+  }
+  $("#p0b").style.display = "none";
+  $("#p0c").style.display = "block";
+  requestAnimationFrame(() => { $("#p0bar").style.width = "100%"; });
+  setTimeout(() => {
+    $("#p0c").style.display = "none";
+    $("#p0d").style.display = "block";
+    setTimeout(() => show("s1"), 1400);
+  }, 2300);
+};
+
+document.querySelectorAll("[data-next]").forEach(b => b.onclick = () => show("s2"));
+
+/* ===== PAGE 2 ===== */
+let ip = false;
+
+function checkIdentity(){
+  $("#n2").disabled = !(ip && $("#nm").value.trim());
+}
+
+["THE THINKER","THE MAKER","THE WILD CARD","THE PEOPLE PERSON"].forEach(t => {
+  const b = document.createElement("button");
+  b.className = "option";
+  b.innerHTML = '<span class="box"></span><span class="cyan">◆</span><strong>'+t+'</strong>';
+  b.onclick = () => {
+    document.querySelectorAll("#ident .option").forEach(x => x.classList.remove("sel"));
+    b.classList.add("sel");
+    ip = true;
+    checkIdentity();
+  };
+  $("#ident").appendChild(b);
+});
+
+$("#nm").oninput = checkIdentity;
+
+const S = {name:"", tool:0, skill:0, char:0, toolName:"", skillName:"", charName:""};
+
+$("#n2").onclick = () => {
+  S.name = $("#nm").value.trim();
+  show("s3");
+};
+
+/* ===== PAGES 3-5 ===== */
+function build(gid, data, key, btn, next, mode){
+  const g = $("#"+gid);
+  data.forEach(d => {
+    const b = document.createElement("button");
+    if(mode === "row"){
+      b.className = "option";
+      b.innerHTML = '<span class="box"></span>' +
+        '<span class="icon">'+svg(IC[d[3]])+'</span>' +
+        '<span><strong>'+d[0]+'</strong>' +
+        '<div class="description"><span class="stars">'+star(d[1])+'</span><br>'+d[2]+'</div></span>';
+    } else {
+      b.className = "character";
+      b.innerHTML = '<div class="portrait">'+face(d[4])+'<img src="'+d[3]+'" alt="'+d[0]+'" onerror="this.remove()"></div>' +
+        '<div class="char-name">'+d[0]+'</div>' +
+        '<div class="char-desc"><div class="stars">'+star(d[1])+'</div>'+d[2]+'</div>';
+    }
+    b.onclick = () => {
+      g.querySelectorAll("button").forEach(x => x.classList.remove("sel"));
+      b.classList.add("sel");
+      S[key] = d[1];
+      if(key === "tool") S.toolName = d[0];
+      if(key === "skill") S.skillName = d[0];
+      if(key === "char") S.charName = d[0];
+      $("#"+btn).disabled = false;
+    };
+    g.appendChild(b);
+  });
+  $("#"+btn).onclick = () => {
+    show(next);
+    if(next === "s6") assess();
+  };
+}
+
+build("g3",[
+  ["HUMAN BRAIN",5,"No battery. No Wi-Fi.","brain"],
+  ["COMPASS",4,"Works perfectly offline. Unlike most humans.","compass"],
+  ["POWER BANK",4,"Keeping humanity online, 1% at a time.","power"],
+  ["DISPOSABLE CAMERA",2,"No algorithm deciding what you remember.","camera"],
+  ["PAPER MAP",2,"In case Google Maps joins the other side.","map"],
+  ["HAND FAN",1,"Are you serious, bro?","fan"]
+],"tool","n3","s4","row");
+
+build("g4",[
+  ["HACKING",5,"Turns out knowing computers is useful. Thinking computers are cooler.","hack"],
+  ["COOKING",4,"Because someone has to feed the resistance.","cook"],
+  ["MEMORY",4,"Useful when the machines start deleting things.","chip"],
+  ["FIXING THINGS",3,"You break it, you fix it, you survive.","hammer"],
+  ["LYING",2,"For when the machines start asking questions.","lie"],
+  ["PANICKING",1,"Not useful, but very human.","panic"]
+],"skill","n4","s5","row");
+
+build("g5", CH, "char", "n5", "s6", "char");
+
+/* ===== PAGE 6 ===== */
+const SCAN = [
+  "SCANNING TOOL SELECTION...",
+  "ANALYZING SURVIVAL SKILLS...",
+  "MATCHING CHARACTER PROFILE...",
+  "CALCULATING HUMANITY INDEX..."
+];
+
+function assess(){
+  $("#calc").style.display = "block";
+  $("#res").style.display = "none";
+  $("#cbar").style.width = "0";
+
+  ["#l1","#l2","#l3","#l4"].forEach((s,i) => {
+    $(s).classList.remove("done","active");
+    $(s).textContent = SCAN[i];
+  });
+
+  requestAnimationFrame(() => { $("#cbar").style.width = "100%"; });
+
+  setTimeout(() => { $("#l1").classList.add("done"); $("#l1").textContent = SCAN[0] + " [OK]"; }, 550);
+  setTimeout(() => { $("#l2").classList.add("done"); $("#l2").textContent = SCAN[1] + " [OK]"; }, 1100);
+  setTimeout(() => { $("#l3").classList.add("done"); $("#l3").textContent = SCAN[2] + " [OK]"; }, 1650);
+  setTimeout(() => { $("#l4").classList.add("active"); }, 2050);
+  setTimeout(result, 3000);
+}
+
+function result(){
+  const total = S.tool + S.skill + S.char;
+  const pct = total / 15 * 100;
+  const ok = pct >= PASS_PERCENT;
+
+  $("#calc").style.display = "none";
+  $("#res").style.display = "block";
+
+  $("#sc").textContent = Math.round(pct) + "%";
+  $("#frac").textContent = total + " / 15  ·  " + (total / 3).toFixed(1) + " / 5";
+  $("#ring").style.setProperty("--pct", pct);
+
+  $("#toolName").textContent = S.toolName;
+  $("#skillName").textContent = S.skillName;
+  $("#charName").textContent = S.charName;
+  $("#toolStars").textContent = star(S.tool);
+  $("#skillStars").textContent = star(S.skill);
+  $("#charStars").textContent = star(S.char);
+
+  const chip = $("#statusChip");
+  const verdict = $("#verdict");
+
+  if(ok){
+    chip.textContent = "ACCESS GRANTED";
+    chip.classList.remove("fail");
+    verdict.textContent = "YOU'RE IN.";
+    verdict.classList.remove("fail");
+    $("#vmsg").textContent = "The system has determined you are still human enough." + (S.name ? " " + S.name + ", ready?" : "");
+    $("#systemMessage").innerHTML =
+      '> SUBJECT CLASSIFICATION: <span class="ok">HUMAN</span><br>' +
+      '> SURVIVAL POTENTIAL: <span class="ok">ACCEPTABLE</span><br>' +
+      '> ACCESS TO RENDEZVOUS: <span class="ok">GRANTED</span>';
+    $("#go").style.display = "inline-block";
+    $("#retry").style.display = "none";
+  } else {
+    chip.textContent = "ACCESS DENIED";
+    chip.classList.add("fail");
+    verdict.textContent = "APPLICATION DENIED.";
+    verdict.classList.add("fail");
+    $("#vmsg").textContent = "Insufficient human qualities detected.";
+    $("#systemMessage").innerHTML =
+      '> SUBJECT CLASSIFICATION: <span class="fail">INSUFFICIENT HUMANITY</span><br>' +
+      '> SURVIVAL POTENTIAL: <span class="fail">LOW</span><br>' +
+      '> ACCESS TO RENDEZVOUS: <span class="fail">DENIED</span>';
+    $("#go").style.display = "none";
+    $("#retry").style.display = "inline-block";
+  }
+}
+
+$("#go").onclick = () => show("s7");
+
+$("#retry").onclick = () => {
+  document.querySelectorAll("#g3 .sel,#g4 .sel,#g5 .sel").forEach(x => x.classList.remove("sel"));
+  ["n3","n4","n5"].forEach(i => { $("#"+i).disabled = true; });
+  S.tool = 0; S.skill = 0; S.char = 0;
+  S.toolName = ""; S.skillName = ""; S.charName = "";
+  show("s3");
+};
+
+/* ===== PAGE 7 ===== */
+$("#loc").textContent = LOCATION_NAME;
+$("#loc").href = LOCATION_URL;
+
+/* ===== TERMINAL STATUS ===== */
+const statusMessages = ["SYSTEM ONLINE","SURVIVOR NETWORK ACTIVE","AI CORE MONITORING","SIGNAL STABLE"];
+let statusIndex = 0;
+setInterval(() => {
+  statusIndex = (statusIndex + 1) % statusMessages.length;
+  $("#status").innerHTML = '<span class="dot"></span><span>' + statusMessages[statusIndex] + '</span>';
+}, 4200);
+</script>
+
+</body>
+</html>
